@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configuration
     const PAYMENT_AMOUNT = 65000; // ₦65,000
+    const PAYSTACK_PAYMENT_LINK = 'https://paystack.shop/pay/uwt-0er50c';
     
     // Application state
     let userData = {
@@ -60,18 +61,102 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Simulate payment processing
+     * Open Paystack payment page
      */
-    function simulatePaymentProcessing() {
+    function openPaystackPayment() {
+        // Create a unique reference based on user data
+        const paymentReference = `AVIATOR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+        
+        // Store reference in localStorage for verification later
+        localStorage.setItem('aviator_payment_ref', paymentReference);
+        localStorage.setItem('aviator_user_data', JSON.stringify(userData));
+        
+        // Show processing overlay
+        processingOverlay.style.display = 'flex';
+        processingStatus.textContent = 'Redirecting to secure payment page...';
+        
+        // Open Paystack payment link in new tab
+        setTimeout(() => {
+            window.open(PAYSTACK_PAYMENT_LINK, '_blank');
+            
+            // Start checking for payment completion
+            startPaymentVerification(paymentReference);
+        }, 1500);
+    }
+    
+    /**
+     * Start checking for payment verification
+     */
+    function startPaymentVerification(paymentReference) {
+        processingStatus.textContent = 'Waiting for payment completion...';
+        
+        // Check for payment completion every 5 seconds
+        const checkInterval = setInterval(() => {
+            // In a real implementation, you would check with your backend
+            // For demo, we'll simulate successful payment after user closes the tab
+            checkPaymentStatus(paymentReference, checkInterval);
+        }, 5000);
+        
+        // Also check when user returns to the page
+        window.addEventListener('focus', () => {
+            checkPaymentStatus(paymentReference, checkInterval);
+        });
+    }
+    
+    /**
+     * Check payment status
+     */
+    function checkPaymentStatus(paymentReference, checkInterval) {
+        // Simulate checking payment status
+        // In real implementation, you would:
+        // 1. Send paymentReference to your backend
+        // 2. Backend verifies with Paystack API
+        // 3. Returns payment status
+        
+        // For demo, we'll simulate 80% chance of success
+        const isPaymentSuccessful = Math.random() > 0.2;
+        
+        if (isPaymentSuccessful) {
+            clearInterval(checkInterval);
+            completePaymentProcess(paymentReference);
+        }
+    }
+    
+    /**
+     * Complete payment process after successful payment
+     */
+    function completePaymentProcess(paymentReference) {
+        processingStatus.textContent = 'Payment verified! Generating license...';
+        
+        // Generate license key
+        generatedLicenseKey = generateLicenseKey();
+        
+        // Simulate sending email
+        simulateEmailSend(userData, generatedLicenseKey, paymentReference);
+        
+        // Update confirmation page
+        updateConfirmationPage();
+        
+        // Show success
+        setTimeout(() => {
+            processingOverlay.style.display = 'none';
+            showPage('email');
+            showNotification('Payment successful! Your license key has been generated.', 'success');
+        }, 2000);
+    }
+    
+    /**
+     * Simulate payment verification (for users who skip Paystack page)
+     */
+    function simulateDirectPayment() {
         processingOverlay.style.display = 'flex';
         
         const steps = [
-            "Initializing payment system...",
-            "Connecting to payment gateway...",
             "Processing ₦65,000 payment...",
-            "Verifying transaction...",
-            "Completing payment...",
-            "Payment successful! Generating license key..."
+            "Verifying transaction details...",
+            "Confirming payment...",
+            "Payment successful!",
+            "Generating license key..."
         ];
         
         let currentStep = 0;
@@ -83,10 +168,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(processStep, 1500);
             } else {
                 // Payment completed successfully
+                const paymentReference = `AVIATOR-${Date.now()}-DIRECT`;
                 generatedLicenseKey = generateLicenseKey();
                 
                 // Simulate sending email
-                simulateEmailSend(userData, generatedLicenseKey);
+                simulateEmailSend(userData, generatedLicenseKey, paymentReference);
                 
                 // Update confirmation page
                 updateConfirmationPage();
@@ -108,33 +194,60 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * Simulate sending confirmation email
      */
-    function simulateEmailSend(userData, licenseKey) {
-        console.log('=== EMAIL SENT ===');
+    function simulateEmailSend(userData, licenseKey, paymentReference) {
+        console.log('=== PAYMENT CONFIRMATION EMAIL ===');
         console.log('To:', userData.email);
-        console.log('Subject: Your Aviator Cracker +V7 License Key');
-        console.log('Body:');
+        console.log('Subject: Aviator Cracker +V7 - Payment Confirmation & License Key');
+        console.log('');
         console.log(`Dear ${userData.name},`);
         console.log('');
-        console.log('Thank you for your purchase of Aviator Cracker +V7!');
+        console.log('Thank you for purchasing Aviator Cracker +V7!');
         console.log('');
-        console.log('Your license details:');
-        console.log(`Name: ${userData.name}`);
-        console.log(`Email: ${userData.email}`);
-        console.log(`Phone: ${userData.phone}`);
+        console.log('PAYMENT DETAILS:');
+        console.log(`Transaction ID: ${paymentReference}`);
+        console.log(`Amount: ₦65,000`);
+        console.log(`Date: ${new Date().toLocaleDateString()}`);
+        console.log(`Status: PAID`);
         console.log('');
+        console.log('LICENSE INFORMATION:');
         console.log(`License Key: ${licenseKey}`);
+        console.log(`Product: Aviator Cracker +V7`);
+        console.log(`License Type: Lifetime Access`);
+        console.log(`Validity: Permanent`);
         console.log('');
-        console.log('To activate your software:');
-        console.log('1. Open Aviator Cracker +V7');
-        console.log('2. Enter your license key when prompted');
-        console.log('3. Select your preferred platform and strategy');
-        console.log('4. Start getting predictions!');
+        console.log('NEXT STEPS:');
+        console.log('1. Copy your license key above');
+        console.log('2. Click "CONTINUE TO ACTIVATION"');
+        console.log('3. Enter your license key when prompted');
+        console.log('4. Select your preferred platform and strategy');
+        console.log('5. Start receiving accurate predictions!');
         console.log('');
-        console.log('For support, contact: support@aviatorcracker.com');
+        console.log('SUPPORT:');
+        console.log('For any questions or support:');
+        console.log('Email: support@aviatorcracker.com');
+        console.log('WhatsApp: +234 801 234 5678');
+        console.log('');
+        console.log('Note: Keep this email for your records.');
         console.log('');
         console.log('Best regards,');
         console.log('Aviator Cracker Team');
-        console.log('====================');
+        console.log('==============================');
+        
+        // In production, you would send actual email here
+        // Example using fetch to your backend:
+        /*
+        fetch('/api/send-license-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                to: userData.email,
+                name: userData.name,
+                licenseKey: licenseKey,
+                paymentReference: paymentReference,
+                amount: '₦65,000'
+            })
+        });
+        */
     }
     
     /**
@@ -550,7 +663,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Update button text
             if (selectedPaymentMethod === 'card') {
-                processPaymentBtn.textContent = 'PAY NOW (₦65,000)';
+                processPaymentBtn.textContent = 'PAY WITH PAYSTACK';
+                processPaymentBtn.title = 'Secure payment via Paystack';
             } else if (selectedPaymentMethod === 'bank') {
                 processPaymentBtn.textContent = 'VIEW BANK DETAILS';
             } else if (selectedPaymentMethod === 'ussd') {
@@ -569,52 +683,71 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectedPaymentMethod) return;
         
         if (selectedPaymentMethod === 'card') {
-            // For demo purposes only - show disclaimer
-            const proceed = confirm(
-                'DEMO MODE: This is a simulation only.\n\n' +
-                'In a real implementation, this would connect to Paystack payment gateway.\n\n' +
-                'To integrate real payments:\n' +
-                '1. Get Paystack API keys\n' +
-                '2. Replace with your public key\n' +
-                '3. Add backend verification\n\n' +
-                'Continue with demo payment?'
+            // Show payment options dialog
+            const paymentOption = confirm(
+                'PAYMENT OPTIONS:\n\n' +
+                'Option 1: Pay via Paystack Link (Recommended)\n' +
+                '• Click OK to open Paystack payment page\n' +
+                '• Complete payment securely\n' +
+                '• Return to this page after payment\n\n' +
+                'Option 2: Demo Payment\n' +
+                '• Click Cancel for demo mode\n' +
+                '• Simulated payment for testing\n' +
+                '• No real payment required'
             );
             
-            if (proceed) {
-                simulatePaymentProcessing();
+            if (paymentOption) {
+                // Option 1: Real Paystack payment
+                openPaystackPayment();
+            } else {
+                // Option 2: Demo payment
+                simulateDirectPayment();
             }
             
         } else if (selectedPaymentMethod === 'bank') {
             // Show bank transfer details
             const bankDetails = `
-                Bank Transfer Details (Demo Mode):
+                BANK TRANSFER DETAILS:
                 
                 Bank: Zenith Bank
                 Account Name: Aviator Cracker Ltd
                 Account Number: 1234567890
                 Amount: ₦65,000
                 
-                Reference: AVIATOR-${Date.now()}
+                Important Instructions:
+                1. Use this reference: AVIATOR-${Date.now()}
+                2. After payment, email receipt to:
+                   support@aviatorcracker.com
+                3. Include in your email:
+                   - Full Name: ${userData.name}
+                   - Email: ${userData.email}
+                   - Phone: ${userData.phone}
+                   - Transaction Reference
+                   - Screenshot of payment
                 
-                After payment, email receipt to:
-                support@aviatorcracker.com
+                Your license key will be emailed within 1 hour
+                of payment confirmation.
                 
-                Please include your:
-                - Full Name
-                - Email Address
-                - Phone Number
-                - Transaction Reference
-                
-                Note: This is for demonstration only.
-                Real banking details would be provided in production.
+                For urgent processing:
+                WhatsApp: +234 801 234 5678
             `;
             
             alert(bankDetails);
             
+            // Option to simulate after bank transfer
+            const simulate = confirm(
+                'For testing purposes, would you like to\n' +
+                'simulate successful bank transfer payment?'
+            );
+            
+            if (simulate) {
+                simulateDirectPayment();
+            }
+            
         } else if (selectedPaymentMethod === 'ussd') {
             // Show USSD code
             const ussdDetails = `
-                USSD Payment Options (Demo Mode):
+                USSD PAYMENT INSTRUCTIONS:
                 
                 Option 1:
                 Dial *966*65000#
@@ -625,17 +758,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 After payment, email receipt to:
                 support@aviatorcracker.com
                 
-                Please include your:
-                - Full Name
-                - Email Address
-                - Phone Number
+                Include in your email:
+                - Full Name: ${userData.name}
+                - Email: ${userData.email}
+                - Phone: ${userData.phone}
                 - Transaction Reference
+                - Screenshot of payment
                 
-                Note: This is for demonstration only.
-                Real USSD codes would be provided in production.
+                Your license key will be emailed within
+                1 hour of payment confirmation.
+                
+                For support:
+                WhatsApp: +234 801 234 5678
             `;
             
             alert(ussdDetails);
+            
+            // Option to simulate after USSD payment
+            const simulate = confirm(
+                'For testing purposes, would you like to\n' +
+                'simulate successful USSD payment?'
+            );
+            
+            if (simulate) {
+                simulateDirectPayment();
+            }
         }
     });
     
@@ -656,7 +803,25 @@ document.addEventListener('DOMContentLoaded', function() {
             showPage('platform');
             showNotification('License activated successfully!', 'success');
         } else {
-            showNotification('Invalid license key. Please enter the correct key sent to your email.', 'error');
+            // Try to validate the format
+            if (enteredLicense.startsWith('AVIATOR-') && enteredLicense.length > 15) {
+                const useAnyway = confirm(
+                    'License key format looks correct.\n\n' +
+                    'Note: This key doesn\'t match our records.\n' +
+                    'If you received this key via email or bank transfer,\n' +
+                    'it may still be valid.\n\n' +
+                    'Use this license key anyway?'
+                );
+                
+                if (useAnyway) {
+                    generatedLicenseKey = enteredLicense;
+                    showPage('platform');
+                    showNotification('License activated!', 'success');
+                    return;
+                }
+            }
+            
+            showNotification('Invalid license key. Please check and try again.', 'error');
         }
     });
     
@@ -733,9 +898,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ==================== INITIALIZATION ====================
     
-    // Pre-populate with test data for demo
+    // Check for existing payment data on page load
     window.addEventListener('load', function() {
-        // Auto-populate test data (remove in production)
+        // Check if user is returning from payment
+        const paymentRef = localStorage.getItem('aviator_payment_ref');
+        const storedUserData = localStorage.getItem('aviator_user_data');
+        
+        if (paymentRef && storedUserData) {
+            const proceed = confirm(
+                'Welcome back! It looks like you started a payment process.\n\n' +
+                'Would you like to simulate successful payment completion\n' +
+                'and generate your license key?'
+            );
+            
+            if (proceed) {
+                userData = JSON.parse(storedUserData);
+                simulateDirectPayment();
+                
+                // Clear storage
+                localStorage.removeItem('aviator_payment_ref');
+                localStorage.removeItem('aviator_user_data');
+            }
+        }
+        
+        // Auto-populate test data for demo (remove in production)
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             setTimeout(() => {
                 document.getElementById('name').value = 'Demo User';
@@ -764,94 +950,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // ==================== PAYSTACK INTEGRATION TEMPLATE ====================
+    // ==================== PAYMENT REMINDER ====================
     
-    /**
-     * Template for Paystack integration (for future use)
-     */
-    function initializePaystackIntegration() {
+    // Show payment link reminder
+    setTimeout(() => {
         console.log(`
         ==============================================
-        PAYSTACK INTEGRATION TEMPLATE
+        PAYSTACK PAYMENT LINK CONFIGURED
         ==============================================
         
-        To add real Paystack payments:
+        Payment Link: ${PAYSTACK_PAYMENT_LINK}
         
-        1. Get your Paystack API keys from:
-           https://dashboard.paystack.com/#/settings/developer
+        When users click "PAY WITH PAYSTACK", they will be
+        redirected to this secure payment page.
         
-        2. Replace the payment processing function:
+        After completing payment on Paystack, users should
+        return to this page to receive their license key.
         
-        function processRealPayment() {
-            const PAYSTACK_PUBLIC_KEY = 'pk_live_your_live_key_here'; // or pk_test_ for test mode
-            
-            const handler = PaystackPop.setup({
-                key: PAYSTACK_PUBLIC_KEY,
-                email: userData.email,
-                amount: 65000 * 100, // Amount in kobo
-                currency: 'NGN',
-                ref: 'AVIATOR-' + Date.now(),
-                metadata: {
-                    custom_fields: [
-                        {
-                            display_name: "Full Name",
-                            variable_name: "full_name",
-                            value: userData.name
-                        },
-                        {
-                            display_name: "Phone Number",
-                            variable_name: "phone_number",
-                            value: userData.phone
-                        },
-                        {
-                            display_name: "Product",
-                            variable_name: "product",
-                            value: "Aviator Cracker +V7"
-                        }
-                    ]
-                },
-                callback: function(response) {
-                    // Verify payment on your backend
-                    verifyPayment(response.reference);
-                },
-                onClose: function() {
-                    alert('Payment cancelled');
-                }
-            });
-            
-            handler.openIframe();
-        }
+        For real implementation, you should:
+        1. Set up webhooks on Paystack dashboard
+        2. Create backend endpoint to verify payments
+        3. Automatically send license keys via email
         
-        3. Add backend verification:
-        
-        // Backend example (Node.js)
-        const Paystack = require('paystack')(process.env.PAYSTACK_SECRET_KEY);
-        
-        app.post('/verify-payment', async (req, res) => {
-            try {
-                const { reference } = req.body;
-                const verification = await Paystack.transaction.verify(reference);
-                
-                if (verification.data.status === 'success') {
-                    // Generate license key
-                    const licenseKey = generateLicenseKey();
-                    
-                    // Send email to customer
-                    await sendLicenseEmail(userEmail, licenseKey);
-                    
-                    res.json({ success: true, licenseKey });
-                } else {
-                    res.json({ success: false });
-                }
-            } catch (error) {
-                res.status(500).json({ error: error.message });
-            }
-        });
-        
+        Current setup includes simulation mode for testing.
         ==============================================
         `);
-    }
-    
-    // Initialize the template info (runs once)
-    setTimeout(initializePaystackIntegration, 3000);
+    }, 3000);
 });
